@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:english_words/english_words.dart';
+import 'package:provider/provider.dart';
+import 'package:startup_namer/models/saved_names.dart';
 
-void main() => runApp(MyApp());
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      // Provides an instance of a ChangeNotifier to its descendants
+      builder: (context) => SavedNamesModel(),
+      child: MyApp(),
+    ),
+  );
+}
 
 class MyApp extends StatelessWidget {
   @override
@@ -29,7 +39,6 @@ class RandomWordsState extends State<RandomWords> {
   // with RandomWords
 
   final _suggestions = <WordPair>[]; // A list of WordPairs
-  final _saved = Set<WordPair>();
   final _biggerFont = const TextStyle(fontSize: 18.0);
 
   @override
@@ -64,6 +73,7 @@ class RandomWordsState extends State<RandomWords> {
   }
 
   Widget _buildRow(WordPair pair) {
+    var _saved = Provider.of<SavedNamesModel>(context);
     final bool alreadySaved = _saved.contains(pair);
 
     return ListTile(
@@ -76,13 +86,11 @@ class RandomWordsState extends State<RandomWords> {
         color: alreadySaved ? Colors.red : null,
       ),
       onTap: () {
-        setState(() {
-          if (alreadySaved) {
-            _saved.remove(pair);
-          } else {
-            _saved.add(pair);
-          }
-        });
+        if (alreadySaved) {
+          Provider.of<SavedNamesModel>(context, listen: false).remove(pair);
+        } else {
+          Provider.of<SavedNamesModel>(context, listen: false).add(pair);
+        }
       },
     );
   }
@@ -91,7 +99,8 @@ class RandomWordsState extends State<RandomWords> {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (BuildContext context) {
-          final Iterable<ListTile> tiles = _saved.map(
+          var _saved = Provider.of<SavedNamesModel>(context);
+          final Iterable<ListTile> tiles = _saved.savedItems.map(
             (WordPair pair) {
               return ListTile(
                 title: Text(
